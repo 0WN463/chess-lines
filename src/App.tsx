@@ -1,35 +1,70 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
 
-function App() {
-  const [count, setCount] = useState(0)
+import { Chess, DEFAULT_POSITION } from 'chess.js';
+import { Chessboard } from 'react-chessboard';
 
-  return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
-  )
+import yaml from "js-yaml";
+
+const ponziani = `
+e4 e5 Nf3 Nc6 c3:
+  - Bc5 d4 exd4 cxd4 Bb4+ Nc3 d6 d5 Ne5 Qa4+
+  - d6 d4 Nf6 h3:
+    - Be6 d5
+    - Nxe4 d5
+`
+
+type Tree = {value: string, children: Tree[]};
+
+const strToTree = (s: string, initialChildren?: Tree[]) => {
+	return s.split(" ").toReversed().reduce((acc: Tree | null, v: string) => !acc ? {value: v, children: initialChildren} : {value: v, children: [acc]}, null)
+}
+
+const makeTree = (s: Object) => {
+	if (typeof s === 'string') {
+		return strToTree(s);
+	}
+	const k = Object.keys(s)[0];
+
+	const children = Object.values(s)[0].map(makeTree);
+
+	const tree = strToTree(k, children);
+
+	return tree;
+}
+
+const App = () => {
+	const [game, setGame] = useState(DEFAULT_POSITION);
+	const [lines, setLines] = useState(ponziani);
+	const [tree, setTree] = useState(makeTree(yaml.load(lines)));
+
+	const chess = new Chess(game);
+	let move = null
+
+	try {
+		console.log(chess.ascii());
+		move = chess.move(tree.value);
+	} catch {
+	}
+
+	const options =  {
+		arrows: move ? [{ startSquare: move.from, endSquare: move.to, color: "red"}] : [],
+		position: game,
+	}
+
+	const onNextClicked = () => {
+		setTree(tree.children[0]);
+		setGame(chess.fen());
+	}
+
+	return (
+		<div className="w-1/2 flex gap-6">
+		<Chessboard
+		options={options}
+		/>
+		<textarea className="w-full" value={lines}/>
+		<button className="border-4" onClick={onNextClicked} >Next</button>
+		</div>
+	)
 }
 
 export default App
