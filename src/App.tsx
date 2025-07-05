@@ -19,11 +19,13 @@ e4 e5 Nf3 Nc6 c3:
   - Nf6 d4:
     - exd4 e5:
       - Ne4 Qe2:
-        - d5 exd6 Bf5 Nd2
-        - Nc5 d4:
-          - Ne6 d5 Nd4 Nxd4 Nxd4 Qe4
-          - Qe7 cxd4 d6 Bb5 dxe5 dxe5 Ng4 0-0 Nxe5 Nxe5 Qxe5 Re1
-      - Nd5 Qb3 Nb6 cxd4 d6 Bb5 Bb4+ Qxb4
+        - d5 exd6 Bf5 Nbd2
+        - Nc5 cxd4:
+          - Ne6 d5:
+            - Ncd4 Nxd4 Nxd4 Qe4
+            - Ned4 Nxd4 Nxd4 Qe4
+      - Qe7 cxd4 d6 Bb5 dxe5 dxe5 Ng4 0-0 Nxe5 Nxe5 Qxe5 Re1
+      - Nd5 Qb3 Nb6 cxd4 d5 Bb5 Bb4+? Qxb4
     - Nxe4 d5 Ne7 Nxe5:
       - d6? Bb5+:
         - Bd7 Bxd7 Qxd7 Nxd7
@@ -31,6 +33,22 @@ e4 e5 Nf3 Nc6 c3:
           - dxe5 cxb7+ Bd7 bxa8Q
           - bxc6 Nxc6 Nxc6 Bxc6+ Bd7 Bxe4 Qe7 O-O Qxe4 Re1
 `;
+
+const isValidTree = (t: Tree, pos: string):boolean => {
+
+	if (!t.value)
+		return t.children.every(t => isValidTree(t, pos));
+
+	const chess = new Chess(pos);
+	try {
+		chess.move(t.value);
+
+		return t.children.every(t => isValidTree(t, chess.fen()));
+	} catch (IllegalMoveException) {
+		console.log("invalid", t.value);
+		return false
+	}
+}
 
 type Tree = { value: string; children: Tree[] };
 type RootedTree = { children: Tree[] };
@@ -42,20 +60,20 @@ const strToTree = (s: string, initialChildren?: Tree[]) => {
     .reduce(
       (acc: Tree | null, v: string) =>
         !acc
-          ? { value: v, children: initialChildren }
+          ? { value: v, children: initialChildren ?? [] }
           : { value: v, children: [acc] },
       null,
     );
 };
 
-const makeRootedTree = (s: Object) => {
+const makeRootedTree = (s: object) => {
   if (!s) return null;
   const tree = makeTree(s);
 
   return { children: [tree] };
 };
 
-const makeTree = (s: Object) => {
+const makeTree = (s: object) => {
   if (typeof s === "string") {
     return strToTree(s);
   }
@@ -99,7 +117,12 @@ const App = () => {
     },
   ]);
 
-  if (!yaml)
+  console.log(history[0].tree);
+  console.log(isValidTree(history[0].tree, DEFAULT_POSITION));
+
+  const currState = history.at(-1);
+
+  if (!yaml || !currState)
     return (
       <main className="w-4/5">
         <div className="flex gap-6">
@@ -114,9 +137,9 @@ const App = () => {
       </main>
     );
 
-  const { tree, position } = history.at(-1);
+  const { tree, position } = currState;
 
-  let moves = tree.children?.map((child) =>
+  const moves = tree.children?.map((child) =>
     moveToCoords(position, child.value),
   );
 

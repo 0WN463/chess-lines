@@ -16,7 +16,7 @@ export default tseslint.config([
       reactRefresh.configs.vite,
     ],
     languageOptions: {
-      ecmaVersion: 2025,
+      ecmaVersion: ES2023,
       globals: globals.browser,
     },
   },
