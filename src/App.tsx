@@ -32,33 +32,55 @@ e4 e5 Nf3 Nc6 c3:
         - c6 dxc6:
           - dxe5 cxb7+ Bd7 bxa8Q
           - bxc6 Nxc6 Nxc6 Bxc6+ Bd7 Bxe4 Qe7 O-O Qxe4 Re1
+          - Qb6 cxb7+ Qxb5 bxa8Q
+          - Nxc6 Nxc6:
+            - Qb6 Nd4
+            - bxc6 Bxc6+ Bd7 Bxe4 Qe7 O-O Qxe4 Re1
 `;
 
-const isValidTree = (t: Tree, pos: string):boolean => {
+const nextPos = (pos: string, move: string) => {
+  const chess = new Chess(pos);
+  try {
+    chess.move(move.replace("?", ""));
 
-	if (!t.value)
-		return t.children.every(t => isValidTree(t, pos));
+    return chess.fen();
+  } catch {
+    console.error("invalid", move);
+    return null;
+  }
+};
 
-	const chess = new Chess(pos);
-	try {
-		chess.move(t.value);
+const makeRootedStateTree = (t: RootedMoveTree) => {
+  const children = t.children.map((c) => makeStateTree(c, DEFAULT_POSITION));
 
-		return t.children.every(t => isValidTree(t, chess.fen()));
-	} catch (IllegalMoveException) {
-		console.log("invalid", t.value);
-		return false
-	}
-}
+  if (children.some((c) => c === null)) return null;
 
-type Tree = { value: string; children: Tree[] };
-type RootedTree = { children: Tree[] };
+  return { children: children as StateTree[] };
+};
 
-const strToTree = (s: string, initialChildren?: Tree[]) => {
+const makeStateTree = (t: MoveTree, pos: string): StateTree | null => {
+  const next = nextPos(pos, t.value);
+
+  if (!next) return null;
+
+  const children = t.children.map((c) => makeStateTree(c, next));
+
+  if (children.some((c) => c === null)) return null;
+
+  return { move: t.value, position: next, children: children as StateTree[] };
+};
+
+type MoveTree = { value: string; children: MoveTree[] };
+type RootedMoveTree = { children: MoveTree[] };
+type StateTree = { move: string; position: string; children: StateTree[] };
+type RootedStateTree = { children: StateTree[] };
+
+const strToTree = (s: string, initialChildren?: MoveTree[]) => {
   return s
     .split(" ")
     .toReversed()
     .reduce(
-      (acc: Tree | null, v: string) =>
+      (acc: MoveTree | null, v: string) =>
         !acc
           ? { value: v, children: initialChildren ?? [] }
           : { value: v, children: [acc] },
@@ -86,43 +108,34 @@ const makeTree = (s: object) => {
   return tree;
 };
 
+// Assumes move has been validated
 const moveToCoords = (position: string, move: string) => {
   const chess = new Chess(position);
 
-  try {
-    const { to, from } = chess.move(move.replace("?", ""));
-    return { startSquare: from, endSquare: to, isBlunder: move.includes("?") };
-  } catch {
-    console.log("invalid move", move, position, DEFAULT_POSITION);
-  }
+  const { to, from } = chess.move(move.replace("?", ""));
+  return { startSquare: from, endSquare: to, isBlunder: move.includes("?") };
 };
 
 const loadYaml = (s: string) => {
   try {
     return yaml.load(s);
   } catch {
-    console.log("invalid yaml");
+    console.error("invalid yaml");
     return null;
   }
 };
 
 const App = () => {
-  const [lines, setLines] = useState(ponziani);
+  const [input, setInput] = useState(ponziani);
 
-  const yaml = loadYaml(lines);
-  const [history, setHistory] = useState([
-    {
-      tree: makeRootedTree(yaml),
-      position: DEFAULT_POSITION,
-    },
-  ]);
+  const yaml = loadYaml(input);
 
-  console.log(history[0].tree);
-  console.log(isValidTree(history[0].tree, DEFAULT_POSITION));
+  const rootedStateTree = makeRootedStateTree(makeRootedTree(yaml));
+  const [history, setHistory] = useState<StateTree[]>([]);
 
   const currState = history.at(-1);
 
-  if (!yaml || !currState)
+  if (!yaml || !rootedStateTree)
     return (
       <main className="w-4/5">
         <div className="flex gap-6">
@@ -130,34 +143,27 @@ const App = () => {
           <textarea
             key="invalid-text"
             className="w-full bg-red-300"
-            value={lines}
-            onChange={(e) => setLines(e.target.value)}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
           />
         </div>
       </main>
     );
 
-  const { tree, position } = currState;
-
+  const tree: StateTree | RootedStateTree = currState ?? rootedStateTree;
+  const currPos = currState?.position ?? DEFAULT_POSITION;
   const moves = tree.children?.map((child) =>
-    moveToCoords(position, child.value),
+    moveToCoords(currPos, child.move),
   );
 
   const options = {
     arrows:
       moves?.map((m) => ({ ...m, color: m.isBlunder ? "red" : "green" })) ?? [],
-    position,
+    position: currPos,
   };
 
   const onMoveClicked = (index: number) => {
-    const chess = new Chess(position);
-    if (tree?.children.length) {
-      chess.move(tree.children[index].value.replace("?", ""));
-      setHistory([
-        ...history,
-        { tree: tree.children[index], position: chess.fen() },
-      ]);
-    }
+    setHistory([...history, tree.children[index]]);
   };
 
   const onBack = () => {
@@ -171,8 +177,8 @@ const App = () => {
         <textarea
           key="valid-text"
           className="w-full"
-          value={lines}
-          onChange={(e) => setLines(e.target.value)}
+          value={input}
+          onChange={(e) => setInput(e.target.value)}
         />
       </div>
       <div className="flex w-full gap-3">
@@ -182,7 +188,7 @@ const App = () => {
             className="border-4 rounded p-2 basis-0 grow max-w-xs"
             onClick={() => onMoveClicked(i)}
           >
-            {c.value}
+            {c.move}
           </button>
         ))}
         {history.length > 1 && (
