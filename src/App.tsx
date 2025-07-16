@@ -91,6 +91,37 @@ const loadYaml = (s: string) => {
   }
 };
 
+const Tree = ({ rootedStateTree }: { rootedStateTree: RootedStateTree }) => {
+  const [tree, setTree] = useState(rootedStateTree);
+
+  const straight = (tree: StateTree, totalIndent: number) => {
+    let ts = [];
+    let t = tree;
+    while (t.children.length === 1) {
+      ts.push(t);
+      t = t.children[0];
+    }
+
+    ts.push(t);
+
+    return (
+      <>
+        <div>
+          {Array.from({ length: totalIndent }).map((_, i) => (
+            <span key={`${totalIndent}-${i}`} className="p-4" />
+          ))}
+          {ts.map((t) => (
+            <span className="p-2">{t.move}</span>
+          ))}
+        </div>
+        {t.children.map((c) => straight(c, totalIndent + 1))}
+      </>
+    );
+  };
+
+  return <div>{straight(tree, 0)}</div>;
+};
+
 const App = () => {
   const query = new URLSearchParams(window.location.search);
   const params = query.get("lines") ?? "";
@@ -130,6 +161,7 @@ const App = () => {
     arrows:
       moves?.map((m) => ({ ...m, color: m.isBlunder ? "red" : "green" })) ?? [],
     position: currPos,
+    allowDragging: false,
   };
 
   const onMoveClicked = (index: number) => {
@@ -141,7 +173,7 @@ const App = () => {
   };
 
   return (
-    <main className="w-3/5">
+    <main className="w-full">
       <div className="flex gap-6 mb-6">
         <Chessboard key="valid" options={options} />
         <textarea
@@ -150,6 +182,7 @@ const App = () => {
           value={input}
           onChange={(e) => setInput(e.target.value)}
         />
+        <Tree rootedStateTree={tree} />
       </div>
       <div className="flex w-full gap-3">
         {tree.children?.map((c, i) => (
