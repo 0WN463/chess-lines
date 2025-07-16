@@ -1,42 +1,8 @@
 import { useState } from "react";
-
 import { Chess, DEFAULT_POSITION } from "chess.js";
 import { Chessboard } from "react-chessboard";
 
 import yaml from "js-yaml";
-
-const ponziani = `
-e4 e5 Nf3 Nc6 c3:
-  - Bc5 d4 exd4 cxd4 Bb4+ Nc3 d6 d5 Ne5 Qa4+
-  - d6 d4 Nf6 h3:
-    - Be6? d5
-    - Nxe4? d5 Ne7 Qa4+
-  - d5 Qa4:
-    - Bd7 exd5 Nd4 Qd1
-    - dxe4 Nxe5 Qd5 Nxc6:
-      - Qxc6? Bb5
-      - bxc6 Bc4
-  - Nf6 d4:
-    - exd4 e5:
-      - Ne4 Qe2:
-        - d5 exd6 Bf5 Nbd2
-        - Nc5 cxd4:
-          - Ne6 d5:
-            - Ncd4 Nxd4 Nxd4 Qe4
-            - Ned4 Nxd4 Nxd4 Qe4
-      - Qe7 cxd4 d6 Bb5 dxe5 dxe5 Ng4 0-0 Nxe5 Nxe5 Qxe5 Re1
-      - Nd5 Qb3 Nb6 cxd4 d5 Bb5 Bb4+? Qxb4
-    - Nxe4 d5 Ne7 Nxe5:
-      - d6? Bb5+:
-        - Bd7 Bxd7 Qxd7 Nxd7
-        - c6 dxc6:
-          - dxe5 cxb7+ Bd7 bxa8Q
-          - bxc6 Nxc6 Nxc6 Bxc6+ Bd7 Bxe4 Qe7 O-O Qxe4 Re1
-          - Qb6 cxb7+ Qxb5 bxa8Q
-          - Nxc6 Nxc6:
-            - Qb6 Nd4
-            - bxc6 Bxc6+ Bd7 Bxe4 Qe7 O-O Qxe4 Re1
-`;
 
 const nextPos = (pos: string, move: string) => {
   const chess = new Chess(pos);
@@ -51,6 +17,7 @@ const nextPos = (pos: string, move: string) => {
 };
 
 const makeRootedStateTree = (t: RootedMoveTree) => {
+  if (!t) return null;
   const children = t.children.map((c) => makeStateTree(c, DEFAULT_POSITION));
 
   if (children.some((c) => c === null)) return null;
@@ -100,8 +67,7 @@ const makeTree = (s: object) => {
     return strToTree(s);
   }
   const k = Object.keys(s)[0];
-
-  const children = Object.values(s)[0].map(makeTree);
+  const children = Object.values(s)?.[0]?.map(makeTree);
 
   const tree = strToTree(k, children);
 
@@ -126,22 +92,26 @@ const loadYaml = (s: string) => {
 };
 
 const App = () => {
-  const [input, setInput] = useState(ponziani);
+  const query = new URLSearchParams(window.location.search);
+  const params = query.get("lines") ?? "";
+  const lines = failable(() => atob(params)) ?? "";
+  const [input, setInput] = useState(lines);
 
   const yaml = loadYaml(input);
 
-  const rootedStateTree = makeRootedStateTree(makeRootedTree(yaml));
-  const [history, setHistory] = useState<StateTree[]>([]);
+  const rootedTree = failable(() => makeRootedTree(yaml));
 
+  const rootedStateTree = makeRootedStateTree(rootedTree);
+  const [history, setHistory] = useState<StateTree[]>([]);
   const currState = history.at(-1);
 
   if (!yaml || !rootedStateTree)
     return (
-      <main className="w-4/5">
-        <div className="flex gap-6">
+      <main className="w-3/5">
+        <div className="flex gap-6 mb-6">
           <Chessboard key="invalid" />
           <textarea
-            key="invalid-text"
+            key="valid-text"
             className="w-full bg-red-300"
             value={input}
             onChange={(e) => setInput(e.target.value)}
@@ -202,6 +172,14 @@ const App = () => {
       </div>
     </main>
   );
+};
+
+const failable = <T,>(f: () => T): T | null => {
+  try {
+    return f();
+  } catch {
+    return null;
+  }
 };
 
 export default App;
