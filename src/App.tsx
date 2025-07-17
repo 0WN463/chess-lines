@@ -118,7 +118,7 @@ const Tree = ({
           ))}
           {ts.map((t) => (
             <span
-              className="my-4 mx-2 p-1 rounded-full hover:bg-sky-700"
+              className="my-4 mx-2 p-1 rounded-full hover:bg-sky-400 hover:text-white"
               onClick={() => onStateSelected(t)}
             >
               {t.move}
@@ -130,7 +130,12 @@ const Tree = ({
     );
   };
 
-  return <div>{straight(tree, 0)}</div>;
+  return (
+    <div>
+      <h2 className="font-bold">Lines</h2>
+      {straight(tree, 0)}
+    </div>
+  );
 };
 
 const App = () => {
@@ -149,15 +154,23 @@ const App = () => {
 
   if (!yaml || !rootedStateTree)
     return (
-      <main className="w-3/5">
+      <main className="w-full">
         <div className="flex gap-6 mb-6">
-          <Chessboard key="invalid" />
-          <textarea
-            key="valid-text"
-            className="w-full bg-red-300"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-          />
+          <div className="size-1/2">
+            <Chessboard key="valid" />
+          </div>
+          <div className="w-full">
+            <details>
+              <summary>Lines Input</summary>
+              <textarea
+                key="valid-text"
+                className="w-full bg-red-200"
+                rows={20}
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+              />
+            </details>
+          </div>
         </div>
       </main>
     );
@@ -192,7 +205,7 @@ const App = () => {
             {tree.children?.map((c, i) => (
               <button
                 key={i}
-                className="border-4 rounded p-2 basis-0 grow max-w-xs"
+                className="border-4 rounded p-2 basis-0 grow max-w-xs hover:bg-gray-100"
                 onClick={() => onMoveClicked(i)}
               >
                 {c.move}
@@ -200,7 +213,7 @@ const App = () => {
             ))}
             {history.length > 1 && (
               <button
-                className="border-4 p-2 basis-0 grow max-w-xs"
+                className="border-4 p-2 basis-0 grow max-w-xs hover:bg-gray-100"
                 onClick={onBack}
               >
                 Back
