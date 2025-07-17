@@ -91,8 +91,14 @@ const loadYaml = (s: string) => {
   }
 };
 
-const Tree = ({ rootedStateTree }: { rootedStateTree: RootedStateTree }) => {
-  const [tree, setTree] = useState(rootedStateTree);
+const Tree = ({
+  rootedStateTree,
+  onStateSelected,
+}: {
+  rootedStateTree: RootedStateTree;
+  onStateSelected: (_: StateTree) => void;
+}) => {
+  const tree = rootedStateTree;
 
   const straight = (tree: StateTree, totalIndent: number) => {
     let ts = [];
@@ -111,7 +117,12 @@ const Tree = ({ rootedStateTree }: { rootedStateTree: RootedStateTree }) => {
             <span key={`${totalIndent}-${i}`} className="p-4" />
           ))}
           {ts.map((t) => (
-            <span className="p-2">{t.move}</span>
+            <span
+              className="my-4 mx-2 p-1 rounded-full hover:bg-sky-700"
+              onClick={() => onStateSelected(t)}
+            >
+              {t.move}
+            </span>
           ))}
         </div>
         {t.children.map((c) => straight(c, totalIndent + 1))}
@@ -208,7 +219,10 @@ const App = () => {
               onChange={(e) => setInput(e.target.value)}
             />
           </details>
-          <Tree rootedStateTree={tree} />
+          <Tree
+            rootedStateTree={rootedStateTree}
+            onStateSelected={(s) => setHistory([...history, s])}
+          />
         </div>
       </div>
     </main>
