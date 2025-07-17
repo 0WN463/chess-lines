@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Chess, DEFAULT_POSITION } from "chess.js";
 import { Chessboard } from "react-chessboard";
+import toast, { Toaster } from "react-hot-toast";
 
 import yaml from "js-yaml";
 
@@ -203,6 +204,7 @@ const App = () => {
 
   return (
     <main className="w-full">
+      <Toaster />
       <div className="flex gap-6 mb-6">
         <div className="size-1/2">
           <Chessboard key="valid" options={options} />
@@ -240,6 +242,17 @@ const App = () => {
               value={input}
               onChange={(e) => setInput(e.target.value)}
             />
+            <button
+              className="border-2 rounded px-2 m-2 hover:bg-gray-100"
+              onClick={() => {
+                navigator.clipboard.writeText(
+                  `${window.location.host}?lines=${btoa(input)}`,
+                );
+                toast("Link copied to clipboard!");
+              }}
+            >
+              Copy link
+            </button>
           </details>
           <Tree
             rootedStateTree={rootedStateTree}
