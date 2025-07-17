@@ -175,33 +175,41 @@ const App = () => {
   return (
     <main className="w-full">
       <div className="flex gap-6 mb-6">
-        <Chessboard key="valid" options={options} />
-        <textarea
-          key="valid-text"
-          className="w-full"
-          value={input}
-          onChange={(e) => setInput(e.target.value)}
-        />
-        <Tree rootedStateTree={tree} />
-      </div>
-      <div className="flex w-full gap-3">
-        {tree.children?.map((c, i) => (
-          <button
-            key={i}
-            className="border-4 rounded p-2 basis-0 grow max-w-xs"
-            onClick={() => onMoveClicked(i)}
-          >
-            {c.move}
-          </button>
-        ))}
-        {history.length > 1 && (
-          <button
-            className="border-4 p-2 basis-0 grow max-w-xs"
-            onClick={onBack}
-          >
-            Back
-          </button>
-        )}
+        <div className="size-1/2">
+          <Chessboard key="valid" options={options} />
+          <div className="flex w-full gap-3 pt-4">
+            {tree.children?.map((c, i) => (
+              <button
+                key={i}
+                className="border-4 rounded p-2 basis-0 grow max-w-xs"
+                onClick={() => onMoveClicked(i)}
+              >
+                {c.move}
+              </button>
+            ))}
+            {history.length > 1 && (
+              <button
+                className="border-4 p-2 basis-0 grow max-w-xs"
+                onClick={onBack}
+              >
+                Back
+              </button>
+            )}
+          </div>
+        </div>
+        <div className="w-full">
+          <details>
+            <summary>Lines Input</summary>
+            <textarea
+              key="valid-text"
+              className="w-full bg-gray-200"
+              rows={20}
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+            />
+          </details>
+          <Tree rootedStateTree={tree} />
+        </div>
       </div>
     </main>
   );
