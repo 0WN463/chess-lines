@@ -143,6 +143,7 @@ const App = () => {
   const params = query.get("lines") ?? "";
   const lines = failable(() => atob(params)) ?? "";
   const [input, setInput] = useState(lines);
+  const [hoverMove, setHoverMove] = useState("");
 
   const yaml = loadYaml(input);
 
@@ -177,13 +178,17 @@ const App = () => {
 
   const tree: StateTree | RootedStateTree = currState ?? rootedStateTree;
   const currPos = currState?.position ?? DEFAULT_POSITION;
-  const moves = tree.children?.map((child) =>
-    moveToCoords(currPos, child.move),
-  );
+  const moves = tree.children?.map((child) => ({
+    ...moveToCoords(currPos, child.move),
+    move: child.move,
+  }));
 
   const options = {
     arrows:
-      moves?.map((m) => ({ ...m, color: m.isBlunder ? "red" : "green" })) ?? [],
+      moves?.map((m) => ({
+        ...m,
+        color: m.move === hoverMove ? "yellow" : m.isBlunder ? "red" : "green",
+      })) ?? [],
     position: currPos,
     allowDragging: false,
   };
@@ -207,6 +212,10 @@ const App = () => {
                 key={i}
                 className="border-4 rounded p-2 basis-0 grow max-w-xs hover:bg-gray-100"
                 onClick={() => onMoveClicked(i)}
+                onMouseEnter={(e) =>
+                  setHoverMove((e.target as Element).innerHTML)
+                }
+                onMouseLeave={() => setHoverMove("")}
               >
                 {c.move}
               </button>
