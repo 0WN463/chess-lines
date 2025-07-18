@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useLayoutEffect } from "react";
 import { Chess, DEFAULT_POSITION } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import toast, { Toaster } from "react-hot-toast";
@@ -144,7 +144,11 @@ const App = () => {
   const params = query.get("lines") ?? "";
   const lines = failable(() => atob(params)) ?? "";
   const [input, setInput] = useState(lines);
+  const [detailOpen, setDetailOpen] = useState(false);
   const [hoverMove, setHoverMove] = useState("");
+
+  const textArea = useRef(null);
+  const selectionRef = useRef({ start: null, end: null });
 
   const yaml = loadYaml(input);
 
@@ -154,6 +158,30 @@ const App = () => {
   const [history, setHistory] = useState<StateTree[]>([]);
   const currState = history.at(-1);
 
+  const handleChange = (e) => {
+    // Save cursor before update
+    selectionRef.current = {
+      start: e.target.selectionStart,
+      end: e.target.selectionEnd,
+    };
+
+    setInput(e.target.value);
+  };
+
+  useLayoutEffect(() => {
+    if (document.activeElement === textArea.current) {
+      return;
+    }
+
+    textArea.current?.focus();
+    const textarea = textArea.current;
+    const { start, end } = selectionRef.current;
+
+    if (textarea && start !== null && end !== null) {
+      textarea.setSelectionRange(start, end);
+    }
+  }, [input]);
+
   if (!yaml || !rootedStateTree)
     return (
       <main className="w-full">
@@ -162,14 +190,17 @@ const App = () => {
             <Chessboard key="valid" />
           </div>
           <div className="w-full">
-            <details>
+            <details
+              onClick={() => setDetailOpen(!detailOpen)}
+              open={detailOpen}
+            >
               <summary>Lines Input</summary>
               <textarea
-                key="valid-text"
+                ref={textArea}
                 className="w-full bg-red-200"
                 rows={20}
                 value={input}
-                onChange={(e) => setInput(e.target.value)}
+                onChange={handleChange}
               />
             </details>
           </div>
@@ -233,14 +264,14 @@ const App = () => {
           </div>
         </div>
         <div className="w-full">
-          <details>
+          <details onClick={() => setDetailOpen(!detailOpen)} open={detailOpen}>
             <summary>Lines Input</summary>
             <textarea
-              key="valid-text"
+              ref={textArea}
               className="w-full bg-gray-200"
               rows={20}
               value={input}
-              onChange={(e) => setInput(e.target.value)}
+              onChange={handleChange}
             />
             <button
               className="border-2 rounded px-2 m-2 hover:bg-gray-100"
