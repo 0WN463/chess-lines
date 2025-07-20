@@ -3,6 +3,8 @@ import { Chess, DEFAULT_POSITION } from "chess.js";
 import { Chessboard } from "react-chessboard";
 import toast, { Toaster } from "react-hot-toast";
 
+import NavigationButtons from "./NavigationButtons";
+
 import yaml from "js-yaml";
 
 const nextPos = (pos: string, move: string) => {
@@ -159,7 +161,6 @@ const App = () => {
   const currState = history.at(-1);
 
   const handleChange = (e) => {
-    // Save cursor before update
     selectionRef.current = {
       start: e.target.selectionStart,
       end: e.target.selectionEnd,
@@ -172,6 +173,8 @@ const App = () => {
     if (document.activeElement === textArea.current) {
       return;
     }
+
+    setHistory([]);
 
     textArea.current?.focus();
     const textarea = textArea.current;
@@ -239,29 +242,14 @@ const App = () => {
       <div className="flex gap-6 mb-6">
         <div className="size-1/2">
           <Chessboard key="valid" options={options} />
-          <div className="flex w-full gap-3 pt-4">
-            {tree.children?.map((c, i) => (
-              <button
-                key={i}
-                className="border-4 rounded p-2 basis-0 grow max-w-xs hover:bg-gray-100"
-                onClick={() => onMoveClicked(i)}
-                onMouseEnter={(e) =>
-                  setHoverMove((e.target as Element).innerHTML)
-                }
-                onMouseLeave={() => setHoverMove("")}
-              >
-                {c.move}
-              </button>
-            ))}
-            {history.length > 1 && (
-              <button
-                className="border-4 p-2 basis-0 grow max-w-xs hover:bg-gray-100"
-                onClick={onBack}
-              >
-                Back
-              </button>
-            )}
-          </div>
+          <NavigationButtons
+            className="flex w-full gap-3 pt-4"
+            options={tree.children.map((c) => c.move)}
+            onBack={onBack}
+            onClick={onMoveClicked}
+            onHover={setHoverMove}
+            withBack={history.length > 1}
+          />
         </div>
         <div className="w-full">
           <details onClick={() => setDetailOpen(!detailOpen)} open={detailOpen}>
