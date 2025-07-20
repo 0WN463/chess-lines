@@ -20,7 +20,6 @@ const nextPos = (pos: string, move: string) => {
 };
 
 const makeRootedStateTree = (t: RootedMoveTree) => {
-  if (!t) return null;
   const children = t.children.map((c) => makeStateTree(c, DEFAULT_POSITION));
 
   if (children.some((c) => c === null)) return null;
@@ -103,15 +102,15 @@ const Tree = ({
 }) => {
   const tree = rootedStateTree;
 
-  const straight = (tree: StateTree, totalIndent: number) => {
-    let ts = [];
+  const straight = (tree: StateTree | RootedStateTree, totalIndent: number):React.ReactNode => {
+    let ts: StateTree[] = [];
     let t = tree;
     while (t.children.length === 1) {
-      ts.push(t);
+      'move' in t && ts.push(t);
       t = t.children[0];
     }
 
-    ts.push(t);
+   'move' in t && ts.push(t);
 
     return (
       <>
@@ -149,18 +148,19 @@ const App = () => {
   const [detailOpen, setDetailOpen] = useState(false);
   const [hoverMove, setHoverMove] = useState("");
 
-  const textArea = useRef(null);
-  const selectionRef = useRef({ start: null, end: null });
+  const textArea = useRef<HTMLTextAreaElement | null>(null);
+  const selectionRef = useRef<{start?: number, end?: number}>({});
 
   const yaml = loadYaml(input);
 
-  const rootedTree = failable(() => makeRootedTree(yaml));
+  const rootedTree = failable(() => makeRootedTree(yaml as object));
 
-  const rootedStateTree = makeRootedStateTree(rootedTree);
+  // @ts-expect-error
+  const rootedStateTree = rootedTree ? makeRootedStateTree(rootedTree) : null;
   const [history, setHistory] = useState<StateTree[]>([]);
   const currState = history.at(-1);
 
-  const handleChange = (e) => {
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     selectionRef.current = {
       start: e.target.selectionStart,
       end: e.target.selectionEnd,
@@ -176,11 +176,11 @@ const App = () => {
 
     setHistory([]);
 
-    textArea.current?.focus();
     const textarea = textArea.current;
+    textarea?.focus();
     const { start, end } = selectionRef.current;
 
-    if (textarea && start !== null && end !== null) {
+    if (textarea && start != null && end != null) {
       textarea.setSelectionRange(start, end);
     }
   }, [input]);
@@ -226,6 +226,7 @@ const App = () => {
       })) ?? [],
     position: currPos,
     allowDragging: false,
+    showNotation: true,
   };
 
   const onMoveClicked = (index: number) => {
