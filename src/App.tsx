@@ -134,9 +134,11 @@ const loadYaml = (s: string) => {
 
 const Tree = ({
   rootedStateTree,
+  currState,
   onStateSelected,
 }: {
   rootedStateTree: RootedStateTree;
+  currState?: StateTree;
   onStateSelected: (_: StateTree) => void;
 }) => {
   const tree = rootedStateTree;
@@ -162,8 +164,9 @@ const Tree = ({
           ))}
           {ts.map((t) => (
             <span
-              className="my-4 mx-2 p-1 rounded-full hover:bg-sky-400 hover:text-white"
+              className={`my-4 mx-2 p-1 rounded-full hover:bg-sky-400 hover:text-white ${currState?.position === t.position ? "bg-sky-500 text-white" : ""}`}
               onClick={() => onStateSelected(t)}
+              key={`${totalIndent}-${t.move}`}
             >
               {t.move}
             </span>
@@ -320,6 +323,7 @@ const App = () => {
           </details>
           <Tree
             rootedStateTree={rootedStateTree}
+            currState={currState}
             onStateSelected={(s) => setHistory([...history, s])}
           />
         </div>
