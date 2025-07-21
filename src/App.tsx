@@ -235,11 +235,10 @@ const App = () => {
             <Chessboard key="valid" />
           </div>
           <div className="w-full">
-            <details
-              onClick={() => setDetailOpen(!detailOpen)}
-              open={detailOpen}
-            >
-              <summary>Lines Input</summary>
+            <details open={detailOpen}>
+              <summary onClick={() => setDetailOpen(!detailOpen)}>
+                Lines Input
+              </summary>
               <textarea
                 ref={textArea}
                 className="w-full bg-red-200"
@@ -296,8 +295,10 @@ const App = () => {
           />
         </div>
         <div className="w-full">
-          <details onClick={() => setDetailOpen(!detailOpen)} open={detailOpen}>
-            <summary>Lines Input</summary>
+          <details open={detailOpen}>
+            <summary onClick={() => setDetailOpen(!detailOpen)}>
+              Lines Input
+            </summary>
             <textarea
               ref={textArea}
               className="w-full bg-gray-200"
