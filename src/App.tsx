@@ -64,6 +64,45 @@ const makeRootedTree = (s: object) => {
   return { children: [tree] };
 };
 
+const getPerspective = (
+  t: RootedMoveTree,
+  candidate?: "white" | "black",
+  prev?: "white" | "black",
+): "white" | "black" | undefined => {
+  if (t.children.length === 0) return candidate;
+
+  if (!prev) {
+    const perspectives = t.children.map((c) =>
+      getPerspective(c, undefined, "black"),
+    );
+
+    if (!perspectives.every((p) => p === perspectives[0])) return undefined;
+
+    return perspectives[0];
+  }
+
+  if (t.children.length === 1)
+    return getPerspective(
+      t.children[0],
+      candidate,
+      prev === "white" ? "black" : "white",
+    );
+
+  if (prev === candidate) return undefined;
+
+  const perspectives = t.children.map((c) =>
+    getPerspective(
+      c,
+      prev === "white" ? "black" : "white",
+      prev === "white" ? "black" : "white",
+    ),
+  );
+
+  if (!perspectives.every((p) => p === perspectives[0])) return undefined;
+
+  return perspectives[0];
+};
+
 const makeTree = (s: object) => {
   if (typeof s === "string") {
     return strToTree(s);
@@ -102,15 +141,18 @@ const Tree = ({
 }) => {
   const tree = rootedStateTree;
 
-  const straight = (tree: StateTree | RootedStateTree, totalIndent: number):React.ReactNode => {
+  const straight = (
+    tree: StateTree | RootedStateTree,
+    totalIndent: number,
+  ): React.ReactNode => {
     let ts: StateTree[] = [];
     let t = tree;
     while (t.children.length === 1) {
-      'move' in t && ts.push(t);
+      "move" in t && ts.push(t);
       t = t.children[0];
     }
 
-   'move' in t && ts.push(t);
+    "move" in t && ts.push(t);
 
     return (
       <>
@@ -149,7 +191,7 @@ const App = () => {
   const [hoverMove, setHoverMove] = useState("");
 
   const textArea = useRef<HTMLTextAreaElement | null>(null);
-  const selectionRef = useRef<{start?: number, end?: number}>({});
+  const selectionRef = useRef<{ start?: number; end?: number }>({});
 
   const yaml = loadYaml(input);
 
@@ -227,6 +269,7 @@ const App = () => {
     position: currPos,
     allowDragging: false,
     showNotation: true,
+    boardOrientation: (rootedTree && getPerspective(rootedTree)) ?? "white",
   };
 
   const onMoveClicked = (index: number) => {
