@@ -4,6 +4,7 @@ import { Chessboard } from "react-chessboard";
 import toast, { Toaster } from "react-hot-toast";
 
 import NavigationButtons from "./NavigationButtons";
+import Support from "./Support";
 
 import yaml from "js-yaml";
 
@@ -252,6 +253,7 @@ const App = () => {
             </details>
           </div>
         </div>
+      <Support />
       </main>
     );
 
@@ -328,6 +330,7 @@ const App = () => {
           />
         </div>
       </div>
+      <Support />
     </main>
   );
 };
