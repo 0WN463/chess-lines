@@ -236,11 +236,13 @@ const App = () => {
   if (!yaml || !rootedStateTree)
     return (
       <main className="w-full">
-        <div className="flex gap-6 mb-6">
-          <div className="size-1/2">
-            <Chessboard key="valid" />
+        <div className="m-2 md:flex gap-6 mb-6">
+          <div className="w-full md:w-100 md:flex-shrink-0">
+            <div className="aspect-square">
+              <Chessboard key="valid" />
+            </div>
           </div>
-          <div className="w-full">
+          <div className="md:w-full">
             <details open={detailOpen} onClick={(e) => e.preventDefault()}>
               <summary onClick={() => setDetailOpen(!detailOpen)}>
                 Lines Input
@@ -275,7 +277,8 @@ const App = () => {
     position: currPos,
     allowDragging: false,
     showNotation: true,
-    boardOrientation: (rootedTree && getPerspective(rootedTree as RootedMoveTree)) ?? "white",
+    boardOrientation:
+      (rootedTree && getPerspective(rootedTree as RootedMoveTree)) ?? "white",
   };
 
   const onMoveClicked = (index: number) => {
@@ -288,10 +291,11 @@ const App = () => {
 
   return (
     <main className="w-full">
-      <Toaster />
-      <div className="flex gap-6 mb-6">
-        <div className="size-1/2">
-          <Chessboard key="valid" options={options} />
+      <div className="m-2 md:flex gap-6 mb-6">
+        <div className="w-full md:w-100 md:flex-shrink-0">
+          <div className="aspect-square">
+            <Chessboard key="valid" options={options} />
+          </div>
           <NavigationButtons
             className="flex w-full gap-3 pt-4"
             options={tree.children.map((c) => c.move)}
@@ -301,7 +305,7 @@ const App = () => {
             withBack={history.length > 1}
           />
         </div>
-        <div className="w-full">
+        <div>
           <details open={detailOpen} onClick={(e) => e.preventDefault()}>
             <summary onClick={() => setDetailOpen(!detailOpen)}>
               Lines Input
@@ -332,6 +336,7 @@ const App = () => {
           />
         </div>
       </div>
+      <Toaster />
       <Support />
     </main>
   );
