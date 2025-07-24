@@ -9,6 +9,29 @@ import { compress, decompress } from "./Huffman";
 
 import yaml from "js-yaml";
 
+const ponzianiLine = `
+e4 e5 Nf3 Nc6 c3:
+  - Bc5 d4 exd4 cxd4 Bb4+ Nc3 d6 d5 Ne5 Qa4+
+  - d6 d4 Nf6 h3:
+    - Be6? d5
+    - Nxe4? d5 Ne7 Qa4+
+  - d5 Qa4:
+    - Bd7 exd5 Nd4 Qd1
+    - dxe4 Nxe5 Qd5 Nxc6:
+      - Qxc6? Bb5
+      - bxc6 Bc4
+  - Nf6 d4:
+    - exd4 e5:
+      - Ne4 Qe2:
+        - d5 exd6 Bf5 Nbd2
+        - Nc5 cxd4:
+          - Ne6 d5:
+            - Ncd4 Nxd4 Nxd4 Qe4
+            - Ned4 Nxd4 Nxd4 Qe4
+      - Qe7 cxd4 d6 Bb5 dxe5 dxe5 Ng4 0-0 Nxe5 Nxe5 Qxe5 Re1
+      - Nd5 Qb3 Nb6 cxd4 d5 Bb5 Bb4+? Qxb4
+`;
+
 const nextPos = (pos: string, move: string) => {
   const chess = new Chess(pos);
   try {
@@ -253,6 +276,7 @@ const App = () => {
                 rows={20}
                 value={input}
                 onChange={handleChange}
+                placeholder={ponzianiLine}
               />
             </details>
           </div>
@@ -305,7 +329,7 @@ const App = () => {
             withBack={history.length > 1}
           />
         </div>
-        <div>
+        <div className="md:w-full">
           <details open={detailOpen} onClick={(e) => e.preventDefault()}>
             <summary onClick={() => setDetailOpen(!detailOpen)}>
               Lines Input
