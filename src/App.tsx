@@ -5,6 +5,7 @@ import toast, { Toaster } from "react-hot-toast";
 
 import NavigationButtons from "./NavigationButtons";
 import Support from "./Support";
+import { compress, decompress } from "./Huffman";
 
 import yaml from "js-yaml";
 
@@ -189,9 +190,8 @@ const Tree = ({
 const App = () => {
   const query = new URLSearchParams(window.location.search);
   const params = query.get("lines") ?? "";
-  const lines = failable(() => atob(params)) ?? "";
+  const lines = failable(() => decompress(params)) ?? "";
   const [input, setInput] = useState(lines);
-  const [detailOpen, setDetailOpen] = useState(false);
   const [hoverMove, setHoverMove] = useState("");
 
   const textArea = useRef<HTMLTextAreaElement | null>(null);
@@ -317,7 +317,7 @@ const App = () => {
               className="border-2 rounded px-2 m-2 hover:bg-gray-100"
               onClick={() => {
                 navigator.clipboard.writeText(
-                  `${window.location.host}?lines=${btoa(input)}`,
+                  `${window.location.host}?lines=${compress(input)}`,
                 );
                 toast("Link copied to clipboard!");
               }}
