@@ -148,14 +148,14 @@ const Tree = ({
     tree: StateTree | RootedStateTree,
     totalIndent: number,
   ): React.ReactNode => {
-    let ts: StateTree[] = [];
+    const ts: StateTree[] = [];
     let t = tree;
     while (t.children.length === 1) {
-      "move" in t && ts.push(t);
+      if ("move" in t) ts.push(t);
       t = t.children[0];
     }
 
-    "move" in t && ts.push(t);
+    if ("move" in t) ts.push(t);
 
     return (
       <>
@@ -203,6 +203,8 @@ const App = () => {
 
   // @ts-expect-error
   const rootedStateTree = rootedTree ? makeRootedStateTree(rootedTree) : null;
+
+  const [detailOpen, setDetailOpen] = useState(rootedStateTree ? false : true);
   const [history, setHistory] = useState<StateTree[]>([]);
   const currState = history.at(-1);
 
@@ -239,7 +241,7 @@ const App = () => {
             <Chessboard key="valid" />
           </div>
           <div className="w-full">
-            <details open={detailOpen}>
+            <details open={detailOpen} onClick={(e) => e.preventDefault()}>
               <summary onClick={() => setDetailOpen(!detailOpen)}>
                 Lines Input
               </summary>
@@ -253,7 +255,7 @@ const App = () => {
             </details>
           </div>
         </div>
-      <Support />
+        <Support />
       </main>
     );
 
@@ -300,7 +302,7 @@ const App = () => {
           />
         </div>
         <div className="w-full">
-          <details open={detailOpen}>
+          <details open={detailOpen} onClick={(e) => e.preventDefault()}>
             <summary onClick={() => setDetailOpen(!detailOpen)}>
               Lines Input
             </summary>
