@@ -34,7 +34,7 @@ const TABLE = {
 const encode = (str: string) => {
   return str
     .split("")
-    .map((c) => c in TABLE && TABLE[c])
+    .map((c) => TABLE[c as keyof typeof TABLE])
     .join("");
 };
 
@@ -45,7 +45,7 @@ const decode = (bitString: string) => {
 
   return bitString
     .split("")
-    .reduce(
+    .reduce<{ buffer: string; output: string[] }>(
       ({ buffer, output }, bit) => {
         const nextBuffer = buffer + bit;
         if (codeToChar[nextBuffer]) {
@@ -64,7 +64,7 @@ const bitStringToBase64 = (bitString: string) => {
   return encodeURIComponent(
     btoa(
       padded
-        .match(/.{8}/g)
+        .match(/.{8}/g)!
         .map((byte) => String.fromCharCode(parseInt(byte, 2)))
         .join(""),
     ),

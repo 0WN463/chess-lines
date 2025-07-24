@@ -275,7 +275,7 @@ const App = () => {
     position: currPos,
     allowDragging: false,
     showNotation: true,
-    boardOrientation: (rootedTree && getPerspective(rootedTree)) ?? "white",
+    boardOrientation: (rootedTree && getPerspective(rootedTree as RootedMoveTree)) ?? "white",
   };
 
   const onMoveClicked = (index: number) => {
